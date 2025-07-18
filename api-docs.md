@@ -12,7 +12,7 @@ This document outlines the API contracts for shipper and transporter authenticat
 
 Register a new shipper user in the system.
 
-**Endpoint:** `/api/shippers/signup`
+**Endpoint:** `/api/shipper/signup`
 
 **Method:** `POST`
 
@@ -20,12 +20,12 @@ Register a new shipper user in the system.
 ```json
 {
   "name": "John Doe",
-  "email": "john@example.com",        // Optional if mobileNumber is provided
-  "mobileNumber": "9876543210",       // Optional if email is provided
+  "email": "john@example.com",        // Required
+  "mobileNumber": "9876543210",       // Required
   "password": "securepassword",       // Required
   "designation": "Logistics Manager", // Required
   "companyName": "ABC Logistics",     // Required
-  "gstNumber": "27AAPFU0939F1ZV"      // Optional
+  "gstNumber": "27AAPFU0939F1ZV"      // Required
 }
 ```
 
@@ -64,7 +64,7 @@ Register a new shipper user in the system.
 
 Authenticate an existing shipper user.
 
-**Endpoint:** `/api/shippers/login`
+**Endpoint:** `/api/shipper/login`
 
 **Method:** `POST`
 
@@ -104,7 +104,7 @@ Authenticate an existing shipper user.
 
 Register a shipper with complete company profile details.
 
-**Endpoint:** `/api/shippers/register`
+**Endpoint:** `/api/shipper/register`
 
 **Method:** `POST`
 
@@ -180,12 +180,12 @@ Register a new transporter user in the system.
 ```json
 {
   "name": "Alex Johnson",
-  "email": "alex@transco.com",        // Optional if mobileNumber is provided
-  "mobileNumber": "9876543212",       // Optional if email is provided
+  "email": "alex@transco.com",        //Required
+  "mobileNumber": "9876543212",       //Required
   "password": "securepassword",       // Required
   "designation": "Fleet Manager",     // Required
   "companyName": "TransCo Logistics", // Required
-  "gstNumber": "27AAPFU0939F1ZV"      // Optional
+  "gstNumber": "27AAPFU0939F1ZV"      // Required
 }
 ```
 
@@ -366,3 +366,208 @@ All endpoints may return these common error responses:
   "message": "Too many requests. Please try again later."
 }
 ```
+## OTP APIs
+
+### 1. Send OTP
+
+Send a one-time password (OTP) to a given phone number using Twilio.
+
+**Endpoint:** `/api/validate/send-otp`  
+**Method:** `POST`
+
+**Request Body:**
+```json
+{
+  "mobileNumber": "+911234567890"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "OTP sent successfully"
+}
+```
+
+**Response (Error - 500):**
+```json
+{
+  "message": "Failed to send OTP",
+  "error": "Twilio error message or Redis error"
+}
+```
+
+---
+
+### 2. Verify MobileNumber via OTP
+
+Verify if the provided OTP matches the one stored in Redis for the given phone number.
+
+**Endpoint:** `/api/validate/verify-otp`  
+**Method:** `POST`
+
+**Request Body:**
+```json
+{
+  "mobileNumber": "+911234567890",
+  "otp": "123456"
+}
+```
+**Response (Error-400):**
+```json
+{
+  "message":"OTP has expired"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "OTP verified successfully"
+}
+```
+
+**Response (Error - 401):**
+```json
+{
+  "message": "Invalid OTP"
+}
+```
+
+**Response (Error - 500):**
+```json
+{
+  "message": "Error verifying OTP",
+  "error": "Redis error or internal server issue"
+}
+```
+
+---
+## 📧 Email Verification APIs
+
+### 1. Check Email Verification Status
+
+Check if the user’s email is:
+- Already verified,
+- Has a verification token already sent but not verified,
+- Or has no token sent yet.
+
+**Endpoint:** `/api/email/check-email-status`  
+**Method:** `POST`
+
+**Request Body:**
+```json
+{
+  "gstNumber": "27ABCDE1234F1Z5",
+  "userType": "shipper", // or "transporter"
+  "email": "user@gmail.com"
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "status": "verified" // or "token_sent_not_verified" or "not_verified_no_token"
+}
+```
+
+**Response (Error - 404 or 500):**
+```json
+{
+  "status": "user_not_found"
+}
+```
+
+---
+
+### 2. Send Verification Email Link
+
+Sends a new email verification link. If a token already exists, it is overwritten.
+
+**Endpoint:** `/api/email/send-email-link`  
+**Method:** `POST`
+
+**Request Body:**
+```json
+{
+  "gstNumber": "27ABCDE1234F1Z5",
+  "userType": "shipper", // or "transporter"
+  "email": "user@gmail.com" 
+}
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Verification email sent"
+}
+```
+**Response (Error - 400):**
+```json
+{
+  "message":"Invalid userType"
+}
+```
+**Response (Error - 404):**
+```json
+{
+  "message": "User not found" 
+}
+```
+**Response (Error - 500):**
+```json
+{
+  "message":"Internal server error",
+  "error": "error.message"
+}
+```
+---
+
+### 3. Verify Email via Token
+
+Triggered when the user clicks the verification link sent to their email.
+(link-  FrontendUrl/verify-email?token=${token})
+
+**Endpoint:** `/api/email/verify-email-link`  
+**Method:** `GET`
+
+**Query Parameters:**
+```
+?token=eyJhbGciOiJIUzI1NiIsInR...
+```
+
+**Response (Success - 200):**
+```json
+{
+  "message": "Email verified successfully"
+}
+```
+
+**Response (Already Verified - 200):**
+```json
+{
+  "message": "Email already verified"
+}
+```
+
+**Response (Error - 400):**
+```json
+{
+  "message": "Invalid or expired token"
+}
+```
+**Respnse(Error - 404):**
+```json
+{
+  "message":"User not found"
+}
+```
+**Response(Error - 500):**
+```json
+{
+  "message": "Internal server error", 
+  "error" : "error.message"
+}
+```
+
+---

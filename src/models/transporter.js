@@ -51,6 +51,12 @@ const Transporter = sequelize.define('Transporter', {
       isEmail: true
     }
   },
+  isEmailVerified: { //Needed to check if users email has been verified of not
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'email_verified'
+  },
   password: {
     type: DataTypes.STRING,
     allowNull: false
