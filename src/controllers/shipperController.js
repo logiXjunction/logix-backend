@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken');
 const validateShipperSignup = async (req) => {
   console.log('Validating shipper signup input:', req.body);
 
-  // Initialize an array to hold validation errors
   const errors = [];
   const {
     name,
@@ -24,9 +23,9 @@ const validateShipperSignup = async (req) => {
   if (!companyName) errors.push('Company name is required');
   if (!designation) errors.push('Designation is required');
   if (!name) errors.push('Name is required');
-  if(!email) errors.push('Email is required');
-  if(!mobileNumber) errors.push('Mobile number is required');
-  if(!gstNumber) errors.push('gstNumber is required');
+  if (!email) errors.push('Email is required');
+  if (!mobileNumber) errors.push('Mobile number is required');
+  if (!gstNumber) errors.push('GST Number is required');
 
   // Validate GST number format (basic validation)
   if (gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstNumber)) {
@@ -35,9 +34,9 @@ const validateShipperSignup = async (req) => {
   }
 
   //Check if gst number already exists
-  if(gstNumber){
-    const existingGstNumber= await Shipper.findOne({where:{gstNumber}});
-    if(existingGstNumber) errors.push('Gst Number is already registered, please login')
+  if (gstNumber) {
+    const existingGstNumber = await Shipper.findOne({ where: { gstNumber } });
+    if (existingGstNumber) errors.push('GST Number is already registered, please login');
   }
 
   // Check if email or mobileNumber already exists(2 GST NUMBER CAN HAVE SAME PHONE NUMBER AND EMAIL)
@@ -62,7 +61,7 @@ exports.signupShipper = async (req, res) => {
 
     // Validate input data
     const validationErrors = await validateShipperSignup(req);
-    
+
     if (validationErrors.length > 0) {
       return res.status(400).json({
         success: false,
@@ -70,7 +69,7 @@ exports.signupShipper = async (req, res) => {
         errors: validationErrors
       });
     }
-    
+
     console.log('Input validation passed');
 
     // Extract fields from request body
@@ -85,14 +84,14 @@ exports.signupShipper = async (req, res) => {
     } = req.body;
 
     console.log('Creating shipper with secured password');
-    
+
     // Create new shipper
     // Note: Password encryption is handled by the beforeCreate hook in the Shipper model
     const newShipper = await Shipper.create({
       name,
       email,
       mobileNumber,
-      password, 
+      password,
       designation,
       companyName,
       gstNumber
@@ -130,12 +129,6 @@ exports.registerShipper = async (req, res) => {
       companyAddress,
       ownerName,
       ownerContactNumber,
-      serviceArea,
-      pincode,
-      pocName,
-      pocEmail,
-      pocDesignation,
-      pocContactNumber,
     } = req.body;
 
     if (!companyName || !email || !password) {
@@ -163,12 +156,6 @@ exports.registerShipper = async (req, res) => {
       companyAddress,
       ownerName,
       ownerContactNumber,
-      serviceArea,
-      pincode,
-      pocName,
-      pocEmail,
-      pocDesignation,
-      pocContactNumber,
     });
 
     const data = newShipper.toJSON();
@@ -193,7 +180,7 @@ exports.registerShipper = async (req, res) => {
 exports.loginShipper = async (req, res) => {
   try {
     const { email, mobileNumber, password } = req.body;
-    
+
     // Validate required fields - either email or mobileNumber must be provided
     if ((!email && !mobileNumber) || !password) {
       return res.status(400).json({
@@ -249,7 +236,7 @@ exports.loginShipper = async (req, res) => {
 // Protected home route for shipper
 exports.getHome = async (req, res) => {
   try {
-    const shipper = req.shipper;  // set by protect middleware
+    const shipper = req.shipper;
 
     return res.status(200).json({
       success: true,
