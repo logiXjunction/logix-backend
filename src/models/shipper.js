@@ -48,6 +48,12 @@ const Shipper = sequelize.define('Shipper', {
     unique: true,
     validate: { isEmail: true }
   },
+  isEmailVerified: { //Needed to check if users email has been verified of not
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'email_verified'
+  },
   password: {
     type: DataTypes.STRING,
     allowNull: false,

@@ -22,17 +22,20 @@ const validateSignupInput = async (req) => {
   if (!companyName) errors.push('Company name is required');
   if (!designation) errors.push('Designation is required');
   if (!name) errors.push('Name is required');
+  if(!email) errors.push('Email is required');
+  if(!mobileNumber) errors.push('Mobile number is required');
+  if(!gstNumber) errors.push('gstNumber is required');
 
-  // Validate that either email or mobileNumber is provided
-  if (!email && !mobileNumber) {
-    console.log('Validation error: Either email or mobile number must be provided');
-    errors.push('Either email or mobile number must be provided');
-  }
 
   // Validate GST number format (basic validation)
   if (gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstNumber)) {
     console.log('Validation error: Invalid GST number format');
     errors.push('Invalid GST number format');
+  }
+  //Check if gst number already exists
+  if(gstNumber){
+    const existingGstNumber= await Shipper.findOne({where:{gstNumber}});
+    if(existingGstNumber) errors.push('Gst Number is already registered, please login')
   }
 
   // Check if email or mobileNumber already exists
