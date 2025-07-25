@@ -123,15 +123,8 @@ exports.registerTransporter = async (req, res) => {
       customerServiceNumber, 
       gstNumber,
       companyAddress,
-      cinNumber,
       ownerName,
       ownerContactNumber,
-      fleetCount,
-      serviceArea,
-      pincode,
-      districtCityRates,
-      serviceType,
-      etdDetails
     } = req.body;
 
     // Validate required fields
@@ -162,15 +155,8 @@ exports.registerTransporter = async (req, res) => {
       customerServiceNumber,
       gstNumber,
       companyAddress,
-      cinNumber,
       ownerName,
       ownerContactNumber,
-      fleetCount,
-      serviceArea,
-      pincode,
-      districtCityRates: districtCityRates ? JSON.stringify(districtCityRates) : null,
-      serviceType,
-      etdDetails: etdDetails ? JSON.stringify(etdDetails) : null
     });
 
     // Remove password from response

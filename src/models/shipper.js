@@ -14,7 +14,7 @@ const Shipper = sequelize.define('Shipper', {
     allowNull: true,
     field: 'name'
   },
-  mobileNumber: {
+   mobileNumber: {
     type: DataTypes.STRING,
     allowNull: true,
     field: 'mobile_number',
@@ -48,7 +48,7 @@ const Shipper = sequelize.define('Shipper', {
     unique: true,
     validate: { isEmail: true }
   },
-  isEmailVerified: {
+  isEmailVerified: { //Needed to check if users email has been verified of not
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false,
@@ -83,6 +83,28 @@ const Shipper = sequelize.define('Shipper', {
     type: DataTypes.STRING,
     field: 'owner_contact_number',
     defaultValue: null,
+  },
+  // POC fields
+  pocName: {
+    type: DataTypes.STRING(255),
+    defaultValue: null,
+    field: 'poc_name',
+  },
+  pocEmail: {
+    type: DataTypes.STRING,
+    defaultValue: null,
+    validate: { isEmail: true },
+    field: 'poc_email',
+  },
+  pocDesignation: {
+    type: DataTypes.STRING(255),
+    defaultValue: null,
+    field: 'poc_designation',
+  },
+  pocContactNumber: {
+    type: DataTypes.STRING,
+    defaultValue: null,
+    field: 'poc_contact_number',
   },
   createdAt: {
     type: DataTypes.DATE,
