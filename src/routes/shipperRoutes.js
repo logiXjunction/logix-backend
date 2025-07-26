@@ -4,11 +4,8 @@ const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Public routes
-// POST route for shipper registration
+// POST route for shipper registration (renamed from signup)
 router.post('/register', shipperController.registerShipper);
-
-// POST route for simplified shipper signup
-router.post('/signup', shipperController.signupShipper);
 
 // POST route for shipper login
 router.post('/login', shipperController.loginShipper);
