@@ -378,7 +378,7 @@ Send a one-time password (OTP) to a given phone number using Twilio.
 **Request Body:**
 ```json
 {
-  "mobileNumber": "+911234567890"
+  "mobileNumber": "1234567890"  //Should be  a 10 digit number
 }
 ```
 
