@@ -18,6 +18,7 @@ router.post('/send-email-link', ValidationController.sendVerificationEmail);
 // GET - Verify email via token (used in email link)
 router.get('/verify-email-link', ValidationController.verifyEmailToken);
 
-
+// GET - Verify GST number and return trade name
+router.get('/verify-gstin', ValidationController.verifyGSTIN)
 
 module.exports = router;
