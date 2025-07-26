@@ -1,26 +1,44 @@
 const Driver = require('../models/Driver');
 const Transporter = require('../models/Transporter');
 
+async function dummyUrl(imageBuffer) {
+  return 'https://example.com/';
+}
+
 exports.registerDriver = async (req, res) => {
   try {
-    // Extract fields from request body
+    const transporter = req.transporter;
+    if (!transporter) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized as transporter'
+      });
+    }
+    const transporterId = transporter.id;
+    const transporterName = transporter.companyName;
+
     const {
       driverName,
       phoneNumber,
-      transporterId,
-      transporterName,
       vehicleNumber,
       aadhaar,
       license,
-      photoUrl
     } = req.body;
 
-    if (!driverName || !phoneNumber || !transporterId || !transporterName || !vehicleNumber || !aadhaar || !license) {
+    if (!driverName || !phoneNumber || !vehicleNumber || !aadhaar || !license) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: driverName, phoneNumber, transporterId, transporterName, vehicleNumber, aadhaar, and license are required'
+        message: 'Missing required fields: driverName, phoneNumber, vehicleNumber, aadhaar, and license are required'
       });
     }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Driver image is required'
+      });
+    }
+    const photoUrl = await dummyUrl(req.file.buffer);
 
     const existingTransporter = await Transporter.findByPk(transporterId);
     if (!existingTransporter) {
