@@ -1,24 +1,49 @@
 const Driver = require('../models/Driver');
 const Transporter = require('../models/Transporter');
 
+function dummyUrl(file) {
+  return 'https://example.com';
+}
+
 exports.registerDriver = async (req, res) => {
   try {
-    // Extract fields from request body
+    if (!req.transporter) {
+      return res.status(401).json({
+        success: false,
+        message: 'Transporter authentication required'
+      });
+    }
+    const transporterId = req.transporter?.id;
+    const transporterName = req.transporter?.companyName;
+    if (!transporterId || !transporterName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transporter information missing in request'
+      });
+    }
+
     const {
       driverName,
       phoneNumber,
-      transporterId,
-      transporterName,
       vehicleNumber,
       aadhaar,
       license,
-      photoUrl
     } = req.body;
 
-    if (!driverName || !phoneNumber || !transporterId || !transporterName || !vehicleNumber || !aadhaar || !license) {
+    if (!driverName || !phoneNumber || !vehicleNumber || !aadhaar || !license) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: driverName, phoneNumber, transporterId, transporterName, vehicleNumber, aadhaar, and license are required'
+        message: 'Missing required fields: driverName, phoneNumber, vehicleNumber, aadhaar, and license are required'
+      });
+    }
+
+    const photoFile = req.file;
+    const photoUrl = dummyUrl(photoFile);
+
+    if (!photoUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Driver photo is required'
       });
     }
 
