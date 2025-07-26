@@ -1,27 +1,41 @@
 const {redisClient} = require('../config/redis');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-const {getUserModel, sendEmail} = require('../utils/helperUtils');
-const {axios} = require('axios')
+const {getUserModel,sendEmail} = require('../utils/helperUtils');
+const axios = require('axios');
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 //OTP sender function to user mobile number
 exports.sendOtp = async (req, res) => {
-  const {mobileNumber} = req.body;
-  const otp = generateOtp();
+  const { mobileNumber } = req.body;
+  if (!mobileNumber) {
+    return res.status(400).json({ message: 'Mobile number is required' });
+  }
+  if( !/^\d{10}$/.test(mobileNumber)) {
+    return res.status(400).json({ message: 'Invalid mobile number format. It should be a 10-digit number.' });
+  }
+  const API_KEY = process.env.API_KEY;
+
 
   try {
-    await redisClient.set(`${mobileNumber}_phoneOtp`, otp, {EX: 60});
-
-    await client.messages.create({
-      body: `Your OTP is: ${otp}`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: mobileNumber
-    });
-
-    res.json({message: 'OTP sent successfully'});
+    // Check if an OTP already exists
+    const existingOtp = await redisClient.get(`${mobileNumber}_phoneOtp`);
+    if (existingOtp) {
+      return res.status(429).json({ message: 'OTP already sent. Please wait before requesting another.' });
+    }
+    const otp = generateOtp();
+    await redisClient.set(`${mobileNumber}_phoneOtp`, otp, { EX: 120 });
+    const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${mobileNumber}/${otp}`;
+    const response = await axios.get(url);
+    if (response.status !== 200) {
+      return res.status(500).json({ message: 'Failed to send OTP', error: response.statusText });
+    }
+    if (response.data.Status === 'Success') {
+      res.json({ message: 'OTP sent successfully' });
+    } else {
+      res.status(500).json({ message: 'Failed to send OTP', error: response.data.Message });
+    }
   } catch (err) {
     res.status(500).json({message: 'Failed to send OTP', error: err.message});
   }
@@ -29,8 +43,11 @@ exports.sendOtp = async (req, res) => {
 
 //OTP verifier function
 exports.verifyOtp = async (req, res) => {
-  const {mobileNumber, otp} = req.body;
-
+  const { mobileNumber, otp } = req.body;
+  if (!mobileNumber || !otp) {
+    return res.status(400).json({ message: 'Mobile number and OTP are required' });
+  }
+  
   try {
     const cachedOtp = await redisClient.get(`${mobileNumber}_phoneOtp`);
 
