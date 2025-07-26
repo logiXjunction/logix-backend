@@ -22,9 +22,9 @@ const validateSignupInput = async (req) => {
   if (!companyName) errors.push('Company name is required');
   if (!designation) errors.push('Designation is required');
   if (!name) errors.push('Name is required');
-  if(!email) errors.push('Email is required');
-  if(!mobileNumber) errors.push('Mobile number is required');
-  if(!gstNumber) errors.push('gstNumber is required');
+  if (!email) errors.push('Email is required');
+  if (!mobileNumber) errors.push('Mobile number is required');
+  if (!gstNumber) errors.push('gstNumber is required');
 
 
   // Validate GST number format (basic validation)
@@ -33,9 +33,9 @@ const validateSignupInput = async (req) => {
     errors.push('Invalid GST number format');
   }
   //Check if gst number already exists
-  if(gstNumber){
-    const existingGstNumber= await Shipper.findOne({where:{gstNumber}});
-    if(existingGstNumber) errors.push('Gst Number is already registered, please login')
+  if (gstNumber) {
+    const existingGstNumber = await Shipper.findOne({ where: { gstNumber } });
+    if (existingGstNumber) errors.push('Gst Number is already registered, please login')
   }
 
   // Check if email or mobileNumber already exists
@@ -60,7 +60,7 @@ exports.signupTransporter = async (req, res) => {
 
     // Validate input data
     const validationErrors = await validateSignupInput(req);
-    
+
     if (validationErrors.length > 0) {
       return res.status(400).json({
         success: false,
@@ -68,7 +68,7 @@ exports.signupTransporter = async (req, res) => {
         errors: validationErrors
       });
     }
-    
+
     console.log('Input validation passed');
 
     // Extract fields from request body
@@ -116,11 +116,11 @@ exports.signupTransporter = async (req, res) => {
 exports.registerTransporter = async (req, res) => {
   try {
     // Extract necessary fields from request body
-    const { 
-      companyName, 
-      password, 
-      email, 
-      customerServiceNumber, 
+    const {
+      companyName,
+      password,
+      email,
+      customerServiceNumber,
       gstNumber,
       companyAddress,
       cinNumber,
@@ -136,7 +136,7 @@ exports.registerTransporter = async (req, res) => {
 
     // Validate required fields
     if (!companyName || !password || !email) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
         message: 'Missing required fields: companyName, password and email are required'
       });
@@ -232,15 +232,16 @@ exports.loginTransporter = async (req, res) => {
 
     // Generate JWT token with available identifier (email or mobileNumber)
     const token = jwt.sign(
-      { 
-        id: transporter.id, 
-        email: transporter.email, 
+      {
+        id: transporter.id,
+        name: transporter.name,
+        email: transporter.email,
         mobileNumber: transporter.mobileNumber,
         companyName: transporter.companyName,
-        userType: 'transporter' 
+        userType: 'transporter'
       },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' } 
+      { expiresIn: '1h' }
     );
 
     // Return success with token
@@ -270,7 +271,7 @@ exports.getHome = async (req, res) => {
   try {
     // req.transporter is set by the auth middleware after token verification
     const transporter = req.transporter;
-    
+
     return res.status(200).json({
       success: true,
       message: 'Welcome to the protected home route',
@@ -300,7 +301,7 @@ exports.getAllTransporters = async (req, res) => {
     const transporters = await Transporter.findAll({
       attributes: { exclude: ['password'] } // Exclude password from the response
     });
-    
+
     return res.status(200).json({
       success: true,
       message: 'Transporters fetched successfully',
@@ -316,3 +317,114 @@ exports.getAllTransporters = async (req, res) => {
     });
   }
 };
+
+exports.registerVehicle = async (req, res) => {
+  try {
+    const {
+      vehicleName,
+      vehicleNumber,
+      vehicleType,
+      dimension,
+      capacity,
+      isRefrigerated,
+      bodyType,
+    } = req.body;
+
+    // Validate required fields
+    if (!vehicleName || !vehicleNumber || !vehicleType || !dimension || !capacity || !isRefrigerated || !bodyType) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: vehicleName, vehicleNumber, vehicleType, dimension, capacity, isRefrigerated, bodyType are required'
+      });
+    }
+    // Validate vehicle number format (format: e.g., MH12AB1234)
+    if (!/^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{1,4}$/.test(vehicleNumber.toUpperCase())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid vehicle number format. Expected format: XX00XX0000 (e.g., MH12AB1234)'
+      });
+    }
+    //Verify vehicle type
+    if (!['truck', 'trailer', 'container', 'tank', 'other'].includes(vehicleType)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid vehicle type. Allowed values are truck, trailer, container, tank, other'
+      });
+    }
+    // Verify body type
+    if (!['open', 'closed'].includes(bodyType)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid body type. Allowed values are open, closed, refrigerated'
+      });
+    }
+
+    //verify dimension if they are number or not and have unit(length, width, height and unit)
+    const { length, width, height, unit } = dimension;
+    if (
+      typeof length !== 'number' ||
+      typeof width !== 'number' ||
+      typeof height !== 'number' ||
+      !['feet', 'meters'].includes(unit)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid dimension format. Expected format: { length: number, width: number, height: number, unit: "feet" | "meters" }'
+      });
+    }
+
+    //verify isRefrigerated is boolean
+    if (typeof isRefrigerated !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid isRefrigerated format. Expected boolean value'
+      });
+    }
+    //check if roadpermit,pollutionCertificate and rc documents are provided
+    //upload documents to S3 and get the urls
+    //check vehicle number is unique
+    const existingVehicle = await Vehicle.findOne({ where: { vehicleNumber } });
+    if (existingVehicle) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vehicle with this number already exists'
+      });
+    }
+    //Verify if vehicle number is valid through gov api's
+
+    //get transportername and transportedid from authorization token
+    const token = req.headers.authorization.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { id, name } = decoded;
+
+
+    // Create new vehicle
+    const newVehicle = await Vehicle.create({
+      vehicleName,
+      bodyType,
+      vehicleNumber,
+      vehicleType,
+      dimension,
+      capacity,
+      isRefrigerated: isRefrigerated || false,
+      rcUrl: rcUrl || 'www.helo.com',
+      roadPermitUrl: roadPermitUrl || 'www.helo.com',
+      pollutionCertificateUrl: pollutionCertificateUrl || 'www.helo.com',
+      transporterName: name,
+      transporterId: id
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Vehicle registered successfully',
+      data: newVehicle
+    });
+  } catch (error) {
+    console.error('Error registering vehicle:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error registering vehicle',
+      error: error.message
+    });
+  }
+}
