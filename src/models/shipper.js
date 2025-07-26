@@ -8,20 +8,31 @@ const Shipper = sequelize.define('Shipper', {
     primaryKey: true,
     autoIncrement: true,
   },
-  // New fields for signup API
-  name: {
+  ownerName: {
     type: DataTypes.STRING,
-    allowNull: true,
-    field: 'name'
+    field: 'owner_name',
+    allowNull: false, 
   },
-   mobileNumber: {
+  ownerContactNumber: {
     type: DataTypes.STRING,
-    allowNull: true,
-    field: 'mobile_number',
+    field: 'owner_contact_number',
+    allowNull: false,
     validate: {
       isTenDigitNumber(value) {
         if (value && !/^\d{10}$/.test(value)) {
-          throw new Error('Mobile number must be a 10 digit number');
+          throw new Error('Contact number must be a 10 digit number');
+        }
+      }
+    }
+  },
+  phoneNumber: {
+    type: DataTypes.STRING,
+    field: 'phone_number',
+    allowNull: false,
+    validate: {
+      isTenDigitNumber(value) {
+        if (value && !/^\d{10}$/.test(value)) {
+          throw new Error('Phone number must be a 10 digit number');
         }
       }
     }
@@ -34,23 +45,23 @@ const Shipper = sequelize.define('Shipper', {
   companyName: {
     type: DataTypes.STRING,
     allowNull: false,
-    field: 'company_name',
+    field: 'company_name'
   },
   companyAddress: {
     type: DataTypes.TEXT,
     field: 'company_address',
-    defaultValue: null,
+    allowNull: false
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: true, // Changed to true as it's conditionally required with mobileNumber
+    allowNull: false, 
     field: 'email',
     unique: true,
     validate: { isEmail: true }
   },
   isEmailVerified: { //Needed to check if users email has been verified of not
     type: DataTypes.BOOLEAN,
-    allowNull: false,
+    allowNull: true,
     defaultValue: false,
     field: 'is_email_verified'
   },
@@ -67,21 +78,19 @@ const Shipper = sequelize.define('Shipper', {
   gstNumber: {
     type: DataTypes.STRING,
     field: 'gst_number',
-    defaultValue: null,
+    allowNull: false,
+    validate: {
+      // Custom GST validation
+      isValidGST(value) {
+        if (value && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value)) {
+          throw new Error('Invalid GST number format');
+        }
+      }
+    }
   },
   cinNumber: {
     type: DataTypes.STRING,
     field: 'cin_number',
-    defaultValue: null,
-  },
-  ownerName: {
-    type: DataTypes.STRING,
-    field: 'owner_name',
-    defaultValue: null,
-  },
-  ownerContactNumber: {
-    type: DataTypes.STRING,
-    field: 'owner_contact_number',
     defaultValue: null,
   },
   // POC fields

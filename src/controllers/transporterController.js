@@ -1,66 +1,68 @@
 const { Transporter } = require('../models');
 const jwt = require('jsonwebtoken');
 
-// Validation function for transporter signup
-const validateSignupInput = async (req) => {
-  console.log('Validating transporter signup input:', req.body);
+// Validation function for transporter registration
+const validateTransporterRegistrationInput = async (req) => {
+  console.log('Validating transporter registration input:', req.body);
 
   // Initialize an array to hold validation errors
   const errors = [];
   const {
-    name,
+    ownerName,
+    ownerContactNumber,
     email,
-    mobileNumber,
+    phoneNumber,
     password,
-    designation,
     companyName,
+    companyAddress,
     gstNumber
   } = req.body;
 
   // Validate required fields
+  if (!ownerName) errors.push('Owner name is required');
+  if (!ownerContactNumber) errors.push('Owner contact number is required');
+  if (!email) errors.push('Email is required');
+  if (!phoneNumber) errors.push('Phone number is required');
   if (!password) errors.push('Password is required');
   if (!companyName) errors.push('Company name is required');
-  if (!designation) errors.push('Designation is required');
-  if (!name) errors.push('Name is required');
-  if (!email) errors.push('Email is required');
-  if (!mobileNumber) errors.push('Mobile number is required');
-  if (!gstNumber) errors.push('gstNumber is required');
-
+  if (!companyAddress) errors.push('Company address is required');
+  if (!gstNumber) errors.push('GST number is required');
 
   // Validate GST number format (basic validation)
   if (gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstNumber)) {
     console.log('Validation error: Invalid GST number format');
     errors.push('Invalid GST number format');
   }
-  //Check if gst number already exists
+  
+  // Check if gst number already exists in Transporter
   if (gstNumber) {
-    const existingGstNumber = await Shipper.findOne({ where: { gstNumber } });
-    if (existingGstNumber) errors.push('Gst Number is already registered, please login')
+    const existingGstNumber = await Transporter.findOne({ where: { gstNumber } });
+    if (existingGstNumber) errors.push('GST number is already registered, please login');
   }
 
-  // Check if email or mobileNumber already exists
+  // Check if email or phoneNumber already exists in Transporter
   if (email) {
     const existingEmail = await Transporter.findOne({ where: { email } });
     if (existingEmail) errors.push('Email is already registered');
   }
 
-  if (mobileNumber) {
-    const existingMobile = await Transporter.findOne({ where: { mobileNumber } });
-    if (existingMobile) errors.push('Mobile number is already registered');
+  if (phoneNumber) {
+    const existingPhone = await Transporter.findOne({ where: { phoneNumber } });
+    if (existingPhone) errors.push('Phone number is already registered');
   }
 
   console.log('Validation errors:', errors);
   return errors;
 };
 
-// Controller for transporter signup
-exports.signupTransporter = async (req, res) => {
+// Controller for transporter registration
+exports.registerTransporter = async (req, res) => {
   try {
-    console.log('Received transporter signup request:', req.body);
+    console.log('Received transporter registration request:', req.body);
 
     // Validate input data
-    const validationErrors = await validateSignupInput(req);
-
+    const validationErrors = await validateTransporterRegistrationInput(req);
+    
     if (validationErrors.length > 0) {
       return res.status(400).json({
         success: false,
@@ -71,106 +73,29 @@ exports.signupTransporter = async (req, res) => {
 
     console.log('Input validation passed');
 
-    // Extract fields from request body
+
+    // Extract required fields from request body
     const {
-      name,
+      ownerName,
+      ownerContactNumber,
       email,
-      mobileNumber,
+      phoneNumber,
       password,
-      designation,
       companyName,
+      companyAddress,
       gstNumber
     } = req.body;
 
     // Create new transporter
     const newTransporter = await Transporter.create({
-      name,
+      ownerName,
+      ownerContactNumber,
       email,
-      mobileNumber,
+      phoneNumber,
       password,
-      designation,
       companyName,
+      companyAddress,
       gstNumber
-    });
-
-    // Remove password from response
-    const transporterData = newTransporter.toJSON();
-    delete transporterData.password;
-
-    return res.status(201).json({
-      success: true,
-      message: 'Transporter signed up successfully',
-      data: transporterData
-    });
-  } catch (error) {
-    console.error('Error during transporter signup:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error during transporter signup',
-      error: error.message
-    });
-  }
-};
-
-// Controller for transporter registration
-exports.registerTransporter = async (req, res) => {
-  try {
-    // Extract necessary fields from request body
-    const {
-      companyName,
-      password,
-      email,
-      customerServiceNumber,
-      gstNumber,
-      companyAddress,
-      cinNumber,
-      ownerName,
-      ownerContactNumber,
-      fleetCount,
-      serviceArea,
-      pincode,
-      districtCityRates,
-      serviceType,
-      etdDetails
-    } = req.body;
-
-    // Validate required fields
-    if (!companyName || !password || !email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields: companyName, password and email are required'
-      });
-    }
-
-    // Check if the email is already registered
-    const existingTransporter = await Transporter.findOne({
-      where: { email }
-    });
-
-    if (existingTransporter) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is already registered'
-      });
-    }
-
-    // Create new transporter
-    const newTransporter = await Transporter.create({
-      companyName,
-      password,
-      email,
-      customerServiceNumber,
-      gstNumber,
-      companyAddress,
-      cinNumber,
-      ownerName,
-      ownerContactNumber,
-      fleetCount,
-      serviceArea,
-      pincode,
-      districtCityRates: districtCityRates ? JSON.stringify(districtCityRates) : null,
-      serviceType,
-      etdDetails: etdDetails ? JSON.stringify(etdDetails) : null
     });
 
     // Remove password from response
@@ -183,10 +108,10 @@ exports.registerTransporter = async (req, res) => {
       data: transporterData
     });
   } catch (error) {
-    console.error('Error registering transporter:', error);
+    console.error('Error during transporter registration:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error registering transporter',
+      message: 'Error during transporter registration',
       error: error.message
     });
   }

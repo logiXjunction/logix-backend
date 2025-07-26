@@ -34,7 +34,7 @@ sequelize.authenticate()
       ? { alter: false } 
       : { alter: true };
     
-    return sequelize.sync(syncOptions);
+    return sequelize.sync({ force: true });
   })
   .then(() => {
     console.log('Database schema synchronized!');

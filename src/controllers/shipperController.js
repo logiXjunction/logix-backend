@@ -1,32 +1,33 @@
 const { Shipper } = require('../models');
 const jwt = require('jsonwebtoken');
 
-// Validation function for shipper signup
-const validateShipperSignup = async (req) => {
-  console.log('Validating shipper signup input:', req.body);
+// Validation function for shipper registration
+const validateShipperRegistration = async (req) => {
+  console.log('Validating shipper registration input:', req.body);
 
   // Initialize an array to hold validation errors
   const errors = [];
   const {
-    name,
+    ownerName,
+    ownerContactNumber,
     email,
-    mobileNumber,
+    phoneNumber,
     password,
-    designation,
     companyName,
+    companyAddress,
     gstNumber
   } = req.body;
 
   // Validate required fields
-  if (!password) {
-    errors.push('Password is required');
-  }
+  if (!ownerName) errors.push('Owner name is required');
+  if (!ownerContactNumber) errors.push('Owner contact number is required');
+  if (!email) errors.push('Email is required');
+  if (!phoneNumber) errors.push('Phone number is required');
+  if (!password) errors.push('Password is required');
   if (!companyName) errors.push('Company name is required');
-  if (!designation) errors.push('Designation is required');
-  if (!name) errors.push('Name is required');
-  if(!email) errors.push('Email is required');
-  if(!mobileNumber) errors.push('Mobile number is required');
-  if(!gstNumber) errors.push('gstNumber is required');
+  if (!companyAddress) errors.push('Company address is required');
+  if (!gstNumber) errors.push('GST number is required');
+
 
   // Validate GST number format (basic validation)
   if (gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstNumber)) {
@@ -34,34 +35,34 @@ const validateShipperSignup = async (req) => {
     errors.push('Invalid GST number format');
   }
 
-  //Check if gst number already exists
-  if(gstNumber){
-    const existingGstNumber= await Shipper.findOne({where:{gstNumber}});
-    if(existingGstNumber) errors.push('Gst Number is already registered, please login')
+  // Check if gst number already exists
+  if (gstNumber) {
+    const existingGstNumber = await Shipper.findOne({ where: { gstNumber } });
+    if (existingGstNumber) errors.push('GST number is already registered, please login');
   }
 
-  // Check if email or mobileNumber already exists(2 GST NUMBER CAN HAVE SAME PHONE NUMBER AND EMAIL)
+  // Check if email or phoneNumber already exists
   if (email) {
     const existingEmail = await Shipper.findOne({ where: { email } });
     if (existingEmail) errors.push('Email is already registered');
   }
 
-  if (mobileNumber) {
-    const existingMobile = await Shipper.findOne({ where: { mobileNumber } });
-    if (existingMobile) errors.push('Mobile number is already registered');
+  if (phoneNumber) {
+    const existingPhone = await Shipper.findOne({ where: { phoneNumber } });
+    if (existingPhone) errors.push('Phone number is already registered');
   }
 
   console.log('Validation errors:', errors);
   return errors;
 };
 
-// Controller for shipper signup
-exports.signupShipper = async (req, res) => {
+// Controller for shipper registration
+exports.registerShipper = async (req, res) => {
   try {
-    console.log('Received shipper signup request:', req.body);
+    console.log('Received shipper registration request:', req.body);
 
     // Validate input data
-    const validationErrors = await validateShipperSignup(req);
+    const validationErrors = await validateShipperRegistration(req);
     
     if (validationErrors.length > 0) {
       return res.status(400).json({
@@ -73,28 +74,29 @@ exports.signupShipper = async (req, res) => {
     
     console.log('Input validation passed');
 
-    // Extract fields from request body
+
+    // Extract required fields from request body
     const {
-      name,
+      ownerName,
+      ownerContactNumber,
       email,
-      mobileNumber,
+      phoneNumber,
       password,
-      designation,
       companyName,
+      companyAddress,
       gstNumber
     } = req.body;
 
-    console.log('Creating shipper with secured password');
-    
     // Create new shipper
     // Note: Password encryption is handled by the beforeCreate hook in the Shipper model
     const newShipper = await Shipper.create({
-      name,
+      ownerName,
+      ownerContactNumber,
       email,
-      mobileNumber,
-      password, 
-      designation,
+      phoneNumber,
+      password,
       companyName,
+      companyAddress,
       gstNumber
     });
 
@@ -104,87 +106,15 @@ exports.signupShipper = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Shipper signed up successfully',
+      message: 'Shipper registered successfully',
       data: shipperData
     });
   } catch (error) {
-    console.error('Error during shipper signup:', error);
+    console.error('Error during shipper registration:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error during shipper signup',
+      message: 'Error during shipper registration',
       error: error.message
-    });
-  }
-};
-
-// Register a new shipper
-exports.registerShipper = async (req, res) => {
-  try {
-    const {
-      companyName,
-      password,
-      email,
-      customerServiceNumber,
-      gstNumber,
-      cinNumber,
-      companyAddress,
-      ownerName,
-      ownerContactNumber,
-      serviceArea,
-      pincode,
-      pocName,
-      pocEmail,
-      pocDesignation,
-      pocContactNumber,
-    } = req.body;
-
-    if (!companyName || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'companyName, email, and password are required',
-      });
-    }
-
-    const existing = await Shipper.findOne({ where: { email } });
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is already registered',
-      });
-    }
-
-    const newShipper = await Shipper.create({
-      companyName,
-      password,
-      email,
-      customerServiceNumber,
-      gstNumber,
-      cinNumber,
-      companyAddress,
-      ownerName,
-      ownerContactNumber,
-      serviceArea,
-      pincode,
-      pocName,
-      pocEmail,
-      pocDesignation,
-      pocContactNumber,
-    });
-
-    const data = newShipper.toJSON();
-    delete data.password;
-
-    return res.status(201).json({
-      success: true,
-      message: 'Shipper registered successfully',
-      data,
-    });
-  } catch (error) {
-    console.error('Error registering shipper:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Registration failed',
-      error: error.message,
     });
   }
 };

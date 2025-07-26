@@ -9,27 +9,38 @@ const Transporter = sequelize.define('Transporter', {
     primaryKey: true,
     autoIncrement: true,
   },
-  // New fields for signup API
-  name: {
+  ownerName: {
     type: DataTypes.STRING,
+    field: 'owner_name',
     allowNull: false, 
-    field: 'name'
   },
-  mobileNumber: {
+  ownerContactNumber: {
     type: DataTypes.STRING,
-    allowNull: true,
-    field: 'mobile_number',
+    field: 'owner_contact_number',
+    allowNull: false,
     validate: {
       isTenDigitNumber(value) {
         if (value && !/^\d{10}$/.test(value)) {
-          throw new Error('Mobile number must be a 10 digit number');
+          throw new Error('Contact number must be a 10 digit number');
+        }
+      }
+    }
+  },
+  phoneNumber: {
+    type: DataTypes.STRING,
+    field: 'phone_number',
+    allowNull: false,
+    validate: {
+      isTenDigitNumber(value) {
+        if (value && !/^\d{10}$/.test(value)) {
+          throw new Error('Phone number must be a 10 digit number');
         }
       }
     }
   },
   designation: {
     type: DataTypes.STRING,
-    allowNull: false, 
+    allowNull: true, 
     field: 'designation'
   },
   // Required fields as per the specifications
@@ -41,11 +52,11 @@ const Transporter = sequelize.define('Transporter', {
   companyAddress: {
     type: DataTypes.TEXT,
     field: 'company_address',
-    defaultValue: null
+    allowNull: false
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: true, // Changed to true as it's conditionally required with mobileNumber
+    allowNull: false, 
     unique: true,
     validate: {
       isEmail: true
@@ -53,7 +64,7 @@ const Transporter = sequelize.define('Transporter', {
   },
   isEmailVerified: { //Needed to check if users email has been verified of not
     type: DataTypes.BOOLEAN,
-    allowNull: false,
+    allowNull: true,
     defaultValue: false,
     field: 'is_email_verified'
   },
@@ -84,23 +95,13 @@ const Transporter = sequelize.define('Transporter', {
     field: 'cin_number',
     defaultValue: null
   },
-  ownerName: {
-    type: DataTypes.STRING,
-    field: 'owner_name',
-    defaultValue: null
-  },
-  ownerContactNumber: {
-    type: DataTypes.STRING,
-    field: 'owner_contact_number',
-    defaultValue: null
-  },
   fleetCount: {
     type: DataTypes.INTEGER,
     field: 'fleet_count',
     defaultValue: 0
   },
   serviceArea: {
-    type: DataTypes.ENUM('district', 'cities', 'all_india'),
+    type: DataTypes.STRING,
     field: 'service_area',
     defaultValue: null
   },
@@ -109,12 +110,12 @@ const Transporter = sequelize.define('Transporter', {
     defaultValue: null
   },
   districtCityRates: {
-    type: DataTypes.TEXT, // JSON string for rates
+    type: DataTypes.TEXT, 
     field: 'district_city_rates',
     defaultValue: null
   },
   serviceType: {
-    type: DataTypes.ENUM('godown_to_godown', 'door_to_door', 'both'),
+    type: DataTypes.STRING,
     field: 'service_type',
     defaultValue: null
   },
