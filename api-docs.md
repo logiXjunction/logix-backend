@@ -8,24 +8,26 @@ This document outlines the API contracts for shipper and transporter authenticat
 
 ## Shipper APIs
 
-### 1. Shipper Signup
+
+### 1. Shipper Registration
 
 Register a new shipper user in the system.
 
-**Endpoint:** `/api/shipper/signup`
+**Endpoint:** `/api/shipper/register`
 
 **Method:** `POST`
 
 **Request Body:**
 ```json
 {
-  "name": "John Doe",
-  "email": "john@example.com",        // Required
-  "mobileNumber": "9876543210",       // Required
-  "password": "securepassword",       // Required
-  "designation": "Logistics Manager", // Required
-  "companyName": "ABC Logistics",     // Required
-  "gstNumber": "27AAPFU0939F1ZV"      // Required
+  "ownerName": "John Doe",                // Required
+  "ownerContactNumber": "9876543210",     // Required
+  "email": "john@example.com",            // Required
+  "phoneNumber": "9876543211",           // Required
+  "password": "securepassword",           // Required
+  "companyName": "ABC Logistics",         // Required
+  "companyAddress": "123 Main St",        // Required
+  "gstNumber": "27AAPFU0939F1ZV"          // Required
 }
 ```
 
@@ -33,14 +35,15 @@ Register a new shipper user in the system.
 ```json
 {
   "success": true,
-  "message": "Shipper signed up successfully",
+  "message": "Shipper registered successfully",
   "data": {
     "id": 1,
-    "name": "John Doe",
+    "ownerName": "John Doe",
+    "ownerContactNumber": "9876543210",
     "email": "john@example.com",
-    "mobileNumber": "9876543210",
-    "designation": "Logistics Manager",
+    "phoneNumber": "9876543211",
     "companyName": "ABC Logistics",
+    "companyAddress": "123 Main St",
     "gstNumber": "27AAPFU0939F1ZV",
     "createdAt": "2025-07-13T10:30:45.123Z",
     "updatedAt": "2025-07-13T10:30:45.123Z"
@@ -168,24 +171,26 @@ Register a shipper with complete company profile details.
 
 ## Transporter APIs
 
-### 1. Transporter Signup
+
+### 1. Transporter Registration
 
 Register a new transporter user in the system.
 
-**Endpoint:** `/api/transporters/signup`
+**Endpoint:** `/api/transporters/register`
 
 **Method:** `POST`
 
 **Request Body:**
 ```json
 {
-  "name": "Alex Johnson",
-  "email": "alex@transco.com",        //Required
-  "mobileNumber": "9876543212",       //Required
-  "password": "securepassword",       // Required
-  "designation": "Fleet Manager",     // Required
-  "companyName": "TransCo Logistics", // Required
-  "gstNumber": "27AAPFU0939F1ZV"      // Required
+  "ownerName": "Alex Johnson",              // Required
+  "ownerContactNumber": "9876543212",       // Required
+  "email": "alex@transco.com",              // Required
+  "phoneNumber": "9876543213",             // Required
+  "password": "securepassword",             // Required
+  "companyName": "TransCo Logistics",       // Required
+  "companyAddress": "456 Transport Hub",    // Required
+  "gstNumber": "27AAPFU0939F1ZV"            // Required
 }
 ```
 
@@ -193,14 +198,15 @@ Register a new transporter user in the system.
 ```json
 {
   "success": true,
-  "message": "Transporter signed up successfully",
+  "message": "Transporter registered successfully",
   "data": {
     "id": 1,
-    "name": "Alex Johnson",
+    "ownerName": "Alex Johnson",
+    "ownerContactNumber": "9876543212",
     "email": "alex@transco.com",
-    "mobileNumber": "9876543212",
-    "designation": "Fleet Manager",
+    "phoneNumber": "9876543213",
     "companyName": "TransCo Logistics",
+    "companyAddress": "456 Transport Hub",
     "gstNumber": "27AAPFU0939F1ZV",
     "createdAt": "2025-07-13T14:20:15.789Z",
     "updatedAt": "2025-07-13T14:20:15.789Z"
@@ -215,7 +221,7 @@ Register a new transporter user in the system.
   "message": "Validation failed",
   "errors": [
     "Password is required",
-    "Mobile number is already registered"
+    "Email is already registered"
   ]
 }
 ```
