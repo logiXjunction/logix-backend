@@ -10,9 +10,6 @@ router.post('/register', transporterController.registerTransporter);
 // POST route for transporter login
 router.post('/login', transporterController.loginTransporter);
 
-//POST route for vechicle registration
-router.post('/register-vehicle', protect, transporterController.registerVehicle);
-
 // Protected routes (requires authentication)
 // GET route for protected home page
 router.get('/home', protect, transporterController.getHome);
