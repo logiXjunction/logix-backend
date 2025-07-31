@@ -70,7 +70,7 @@ exports.registerTransporter = async (req, res) => {
         errors: validationErrors
       });
     }
-    
+
     console.log('Input validation passed');
 
 
@@ -157,15 +157,15 @@ exports.loginTransporter = async (req, res) => {
 
     // Generate JWT token with available identifier (email or mobileNumber)
     const token = jwt.sign(
-      { 
-        id: transporter.id, 
-        email: transporter.email, 
+      {
+        id: transporter.id,
+        email: transporter.email,
         mobileNumber: transporter.mobileNumber,
         companyName: transporter.companyName,
-        userType: 'transporter' 
+        userType: 'transporter'
       },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' } 
+      { expiresIn: '1h' }
     );
 
     // Return success with token
@@ -195,7 +195,7 @@ exports.getHome = async (req, res) => {
   try {
     // req.transporter is set by the auth middleware after token verification
     const transporter = req.transporter;
-    
+
     return res.status(200).json({
       success: true,
       message: 'Welcome to the protected home route',
@@ -225,7 +225,7 @@ exports.getAllTransporters = async (req, res) => {
     const transporters = await Transporter.findAll({
       attributes: { exclude: ['password'] } // Exclude password from the response
     });
-    
+
     return res.status(200).json({
       success: true,
       message: 'Transporters fetched successfully',
@@ -241,3 +241,4 @@ exports.getAllTransporters = async (req, res) => {
     });
   }
 };
+
