@@ -1,24 +1,37 @@
-const Driver = require('../models/Driver');
-const Transporter = require('../models/Transporter');
+const Driver = require('../models/driver');
+const Transporter = require('../models/transporter');
+
+function dummyUrl(file) {
+  return 'https://example.com';
+}
 
 exports.registerDriver = async (req, res) => {
   try {
-    // Extract fields from request body
+    // Extract transporterId and transporterName from JWT (req.user)
+    const { transporterId, transporterName } = req.user || {};
+    // Extract other fields from request body
     const {
       driverName,
       phoneNumber,
-      transporterId,
-      transporterName,
       vehicleNumber,
       aadhaar,
       license,
-      photoUrl
     } = req.body;
 
-    if (!driverName || !phoneNumber || !transporterId || !transporterName || !vehicleNumber || !aadhaar || !license) {
+    if (!driverName || !phoneNumber || !vehicleNumber || !aadhaar || !license || !transporterId || !transporterName) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: driverName, phoneNumber, transporterId, transporterName, vehicleNumber, aadhaar, and license are required'
+        message: 'Missing required fields: driverName, phoneNumber, vehicleNumber, aadhaar, license, transporterId, and transporterName are required'
+      });
+    }
+
+    const photoFile = req.file;
+    const photoUrl = dummyUrl(photoFile);
+
+    if (!photoUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Driver Photo is required'
       });
     }
 
