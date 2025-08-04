@@ -63,7 +63,7 @@ const Shipper = sequelize.define('Shipper', {
     type: DataTypes.BOOLEAN,
     allowNull: true,
     defaultValue: false,
-    field: 'email_verified'
+    field: 'is_email_verified'
   },
   password: {
     type: DataTypes.STRING,
