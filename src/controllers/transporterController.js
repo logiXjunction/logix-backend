@@ -33,7 +33,7 @@ const validateTransporterRegistrationInput = async (req) => {
     console.log('Validation error: Invalid GST number format');
     errors.push('Invalid GST number format');
   }
-  
+
   // Check if gst number already exists in Transporter
   if (gstNumber) {
     const existingGstNumber = await Transporter.findOne({ where: { gstNumber } });
@@ -62,7 +62,7 @@ exports.registerTransporter = async (req, res) => {
 
     // Validate input data
     const validationErrors = await validateTransporterRegistrationInput(req);
-    
+
     if (validationErrors.length > 0) {
       return res.status(400).json({
         success: false,
@@ -255,6 +255,12 @@ exports.getCurrentTransporter = async (req, res) => {
 
     const transporterId = req.user.transporterId;
 
+    if (!transporterId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transporter ID is required'
+      });
+    }
     // Fetch transporter details (excluding password)
     const transporter = await Transporter.findByPk(transporterId, {
       attributes: { exclude: ['password'] }
