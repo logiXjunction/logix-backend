@@ -2,23 +2,28 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const Vehicle = sequelize.define('Vehicle', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
     vehicleName: {
         type: DataTypes.STRING,
         allowNull: false,
         field: 'vehicle_name'
     },
     dimension: {
-        type: DataTypes.JSON, // will contain { length, width, height and unit }
+        type: DataTypes.STRING, 
         allowNull: false,
         field: 'dimension',
     },
     capacity: {
-        type: DataTypes.JSON, // will contain { value and unit }
+        type: DataTypes.FLOAT, 
         allowNull: false, 
         field: 'capacity'
     },
     vehicleType: {
-        type: DataTypes.ENUM('truck', 'trailer', 'container', 'tank', 'other'),
+        type: DataTypes.STRING,
         allowNull: false,
         field: 'vehicle_type'
     },
@@ -84,7 +89,7 @@ const Vehicle = sequelize.define('Vehicle', {
         allowNull: false,
         field: 'transporter_id',
         references: {
-            model: 'transporters', // Assuming the Transporter model is defined in the same database
+            model: 'transporters', 
             key: 'id'
         }
     },
@@ -101,7 +106,7 @@ const Vehicle = sequelize.define('Vehicle', {
         field: 'updated_at'
     }
 }, {
-    tableName: 'Vehicles',
+    tableName: 'vehicles',
     timestamps: true
 });
 

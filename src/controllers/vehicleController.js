@@ -16,10 +16,10 @@ exports.registerVehicle = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!vehicleName || !vehicleNumber || !vehicleType || !dimension || !capacity || !isRefrigerated || !bodyType) {
+    if (!vehicleName || !vehicleNumber || !vehicleType || !dimension || !capacity || !bodyType) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: vehicleName, vehicleNumber, vehicleType, dimension, capacity, isRefrigerated, bodyType are required'
+        message: 'Missing required fields: vehicleName, vehicleNumber, vehicleType, dimension, capacity, bodyType are required'
       });
     }
     // Validate vehicle number format (format: e.g., MH12AB1234)
@@ -29,34 +29,14 @@ exports.registerVehicle = async (req, res) => {
         message: 'Invalid vehicle number format. Expected format: XX00XX0000 (e.g., MH12AB1234)'
       });
     }
-    //Verify vehicle type
-    if (!['truck', 'trailer', 'container', 'tank', 'other'].includes(vehicleType)) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Invalid vehicle type. Allowed values are truck, trailer, container, tank, other'
-      });
-    }
     // Verify body type
     if (!['open', 'closed'].includes(bodyType)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid body type. Allowed values are open, closed, refrigerated'
+        message: 'Invalid body type. Allowed values are open or closed'
       });
     }
 
-    //verify dimension if they are number or not and have unit(length, width, height and unit)
-    const { length, width, height, unit } = dimension;
-    if (
-      typeof length !== 'number' ||
-      typeof width !== 'number' ||
-      typeof height !== 'number' ||
-      !['feet', 'meters'].includes(unit)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid dimension format. Expected format: { length: number, width: number, height: number, unit: "feet" | "meters" }'
-      });
-    }
 
     //verify isRefrigerated is boolean
     if (typeof isRefrigerated !== 'boolean') {
@@ -91,10 +71,10 @@ exports.registerVehicle = async (req, res) => {
       vehicleType,
       dimension,
       capacity,
-      isRefrigerated: isRefrigerated || false,
-      rcUrl: rcUrl || 'www.helo.com',
-      roadPermitUrl: roadPermitUrl || 'www.helo.com',
-      pollutionCertificateUrl: pollutionCertificateUrl || 'www.helo.com',
+      isRefrigerated,
+      rcUrl: 'www.helo.com',
+      roadPermitUrl: 'www.helo.com',
+      pollutionCertificateUrl: 'www.helo.com',
       transporterName: name,
       transporterId: id
     });
