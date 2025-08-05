@@ -17,4 +17,7 @@ router.get('/home', protect, transporterController.getHome);
 // GET route to fetch all transporters
 router.get('/all', protect, transporterController.getAllTransporters);
 
+router.get('/me', protect, transporterController.getCurrentTransporter);
+
+
 module.exports = router;

@@ -242,3 +242,43 @@ exports.getAllTransporters = async (req, res) => {
   }
 };
 
+// Get details of the currently logged-in transporter
+exports.getCurrentTransporter = async (req, res) => {
+  try {
+    // Ensure the request comes from a transporter
+    if (!req.user || req.user.userType !== 'transporter') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Not a transporter'
+      });
+    }
+
+    const transporterId = req.user.transporterId;
+
+    // Fetch transporter details (excluding password)
+    const transporter = await Transporter.findByPk(transporterId, {
+      attributes: { exclude: ['password'] }
+    });
+
+    if (!transporter) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transporter not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Transporter details fetched successfully',
+      data: transporter
+    });
+  } catch (error) {
+    console.error('Error fetching transporter:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
