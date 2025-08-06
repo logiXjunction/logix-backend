@@ -13,5 +13,7 @@ router.post('/login', shipperController.loginShipper);
 // Protected routes (requires authentication)
 // GET route for protected home page
 router.get('/home', protect, shipperController.getHome);
+// Protected route to get current logged-in shipper
+router.get('/me', protect, shipperController.getCurrentShipper);
 
 module.exports = router;
