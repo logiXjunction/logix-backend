@@ -1,15 +1,18 @@
 const Consignment = require('../models/consignment');
-const Shipment = require('../models/shipment');
+// const Shipment = require('../models/shipment');
 
 //1 CREATE CONSIGNMENT
 exports.createConsignment = async (req, res) => {
     try {
-        if(req.user.userType=='shipper') {
+
+        // Only allow users with transporter role to create consignments
+        if(req.user.userType !== 'transporter') {
             return res.status(403).json({
                 success: false,
                 message: 'Only transporters can create consignments'
             });
         }
+
         // Extract feilds from req body
         const{
             shipmentId, 
@@ -19,6 +22,7 @@ exports.createConsignment = async (req, res) => {
 
         // Extract transporterId from JWT (req.user)
         const transporterId= req.user.transporterId 
+
         //1 Validate feilds
         if(!shipmentId  || !transporterId || !source || !destination){
             return res.status(400).json({
