@@ -1,5 +1,5 @@
 const Consignment = require('../models/consignment');
-// const Shipment = require('../models/shipment');
+const Shipment = require('../models/shipment');
 
 //1 CREATE CONSIGNMENT
 exports.createConsignment = async (req, res) => {
