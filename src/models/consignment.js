@@ -12,7 +12,7 @@ const Consignment = sequelize.define('Consignment', {
         allowNull: false,
         field: 'shipment_id',
         references: {
-            model: 'transporters',
+            model: 'shipments',
             key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -67,7 +67,7 @@ const Consignment = sequelize.define('Consignment', {
         field: 'updated_at'
     }
 }, {
-    tableName: 'consignment',
+    tableName: 'consignments',
     timestamps: true
 })
 

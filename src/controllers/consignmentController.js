@@ -1,76 +1,42 @@
 const Consignment = require('../models/consignment');
-const Shipper  = require('../models/Shipper');
-const Transporter = require('../models/Transporter');
+const Shipment = require('../models/shipment');
 
 //1 CREATE CONSIGNMENT
 exports.createConsignment = async (req, res) => {
     try {
+        if(req.user.userType=='shipper') {
+            return res.status(403).json({
+                success: false,
+                message: 'Only transporters can create consignments'
+            });
+        }
         // Extract feilds from req body
         const{
-            shipperId, 
+            shipmentId, 
             source,
             destination 
         } = req.body;
 
         // Extract transporterId from JWT (req.user)
-        const {id: transporterId} = req.user || {};
-
+        const transporterId= req.user.transporterId 
         //1 Validate feilds
-        if(!shipperId || !transporterId || !source || !destination){
+        if(!shipmentId  || !transporterId || !source || !destination){
             return res.status(400).json({
                 success: false,
                 message: 'Missing required fields: shipmentId, transporterId, source, or destination'
             });
         }
 
-        //2 Ensure only shippers can create consignments
-        if (req.user.userType !== 'shipper') {
+        const shipment = await Shipment.findByPk(shipmentId);
+        if (!shipment) {
             return res.status(404).json({
                 success: false,
-                message: 'Only shippers are allowed to create consignments.',
+                message: 'Shipment not found'
             });
         }
-
-        //3 Ensure the shipper exists 
-        const shipper  = await Shipper.findByPk(shipperId);
-        if (!shipper) {
-            return res.status(404).json({
-                success: false,
-                message: 'Shipper not found.',
-            });
-        }
-
-        if (shipper.id!== req.user.id) {
-            return res.status(403).json({
-                success: false,
-                message: 'You are not authorized to create a consignment for this shipment.',
-            });
-        }
-
-        //4 Check if transporter exists
-        const transporter = await Transporter.findByPk(transporterId);
-            if (!transporter) {
-            return res.status(404).json({
-                success: false,
-                message: 'Transporter not found.',
-            });
-        }
-
-        //5 Prevent duplicate consignment for this shipment
-        const existingConsignment = await Consignment.findOne({
-            where: { shipperId },
-        });
-
-        if (existingConsignment) {
-            return res.status(409).json({
-                success: false,
-                message: 'Consignment already exists for this shipment.',
-            });
-        }
-        
         //6 Create the consignment (default status to 'pending')
         const newConsignment = await Consignment.create({
-            shipperId,
+            shipmentId,
             transporterId,
             source,
             destination
