@@ -7,6 +7,7 @@ const transporterRoutes = require('./routes/transporterRoutes');
 const shipperRoutes = require('./routes/shipperRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
+const shipmentRoutes = require('./routes/shipmentRoutes');
 
 const cors = require('cors');
 
@@ -39,6 +40,7 @@ app.use('/api/validate', validationRoutes);
 app.use('/api/transporters', transporterRoutes);
 app.use('/api/shipper', shipperRoutes);
 app.use('/api/vehicle', vehicleRoutes);
+app.use('/api/shipment', shipmentRoutes)
 
 
 // Error handling middleware
