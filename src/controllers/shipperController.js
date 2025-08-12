@@ -199,3 +199,42 @@ exports.getHome = async (req, res) => {
     });
   }
 };
+// Get details of the currently logged-in shipper
+exports.getCurrentShipper = async (req, res) => {
+  try {
+    // Ensure the request comes from a shipper
+    if (!req.user || req.user.userType !== 'shipper') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Not a shipper',
+      });
+    }
+
+    const shipperId = req.user.shipperId;
+
+    // Fetch shipper details (excluding password)
+    const shipper = await Shipper.findByPk(shipperId, {
+      attributes: { exclude: ['password'] },
+    });
+
+    if (!shipper) {
+      return res.status(404).json({
+        success: false,
+        message: 'Shipper not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Shipper details fetched successfully',
+      data: shipper,
+    });
+  } catch (error) {
+    console.error('Error fetching shipper:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message,
+    });
+  }
+};

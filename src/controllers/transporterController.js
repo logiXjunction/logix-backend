@@ -33,7 +33,7 @@ const validateTransporterRegistrationInput = async (req) => {
     console.log('Validation error: Invalid GST number format');
     errors.push('Invalid GST number format');
   }
-  
+
   // Check if gst number already exists in Transporter
   if (gstNumber) {
     const existingGstNumber = await Transporter.findOne({ where: { gstNumber } });
@@ -62,7 +62,7 @@ exports.registerTransporter = async (req, res) => {
 
     // Validate input data
     const validationErrors = await validateTransporterRegistrationInput(req);
-    
+
     if (validationErrors.length > 0) {
       return res.status(400).json({
         success: false,
@@ -237,6 +237,52 @@ exports.getAllTransporters = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Error fetching transporters',
+      error: error.message
+    });
+  }
+};
+
+// Get details of the currently logged-in transporter
+exports.getCurrentTransporter = async (req, res) => {
+  try {
+    // Ensure the request comes from a transporter
+    if (!req.user || req.user.userType !== 'transporter') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Not a transporter'
+      });
+    }
+
+    const transporterId = req.user.transporterId;
+
+    if (!transporterId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transporter ID is required'
+      });
+    }
+    // Fetch transporter details (excluding password)
+    const transporter = await Transporter.findByPk(transporterId, {
+      attributes: { exclude: ['password'] }
+    });
+
+    if (!transporter) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transporter not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Transporter details fetched successfully',
+      data: transporter
+    });
+  } catch (error) {
+    console.error('Error fetching transporter:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
       error: error.message
     });
   }
