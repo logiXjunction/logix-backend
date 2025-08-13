@@ -70,8 +70,6 @@ exports.inquiryForm = async (req, res) => {
     try {
         const formData = req.body;
 
-        console.log("form data ", formData);
-
         const reportData = {};
         columns.forEach(col => {
             reportData[col] = req.body[col] !== undefined ? req.body[col] : '';
@@ -83,8 +81,6 @@ exports.inquiryForm = async (req, res) => {
         reportData.submittedAt = new Date().toISOString();
 
         //2 Create Excel file
-
-
         const filePath = path.join(__dirname, '../temp', 'all_inquiries.xlsx');
         const workbook = new ExcelJS.Workbook();
         let worksheet;
@@ -118,9 +114,7 @@ exports.inquiryForm = async (req, res) => {
             // Save the file back
             await workbook.xlsx.writeFile(filePath);
 
-
             //3 Send email
-
             // Prepare a text version of the report
             const reportText = Object.entries(reportData)
                 .map(([key, value]) => `${key}: ${value}`)
@@ -129,12 +123,10 @@ exports.inquiryForm = async (req, res) => {
             console.log(" report data : ", reportData);
 
             await sendEmail({
-                to: "vivi@example.com",
-                subject: `New Form Submission #${formData.name}`,
-                html: `
-                    <h3>New Inquiry Form Submission</h3>
-                    <pre>${reportText}</pre>
-                `
+                from: `"Ultron Support" <${process.env.EMAIL_USER}>`,
+                to: `${process.env.EMAIL_SUPPORT}`,
+                subject: `New Inquiry Form Submission #${reportData.name}`,
+                html: `<h3>New Inquiry Form Submission</h3><pre>${reportText}</pre>`,
             });
 
             res.status(201).json({

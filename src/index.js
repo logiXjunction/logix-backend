@@ -40,7 +40,7 @@ app.use('/api/validate', validationRoutes);
 app.use('/api/transporters', transporterRoutes);
 app.use('/api/shipper', shipperRoutes);
 app.use('/api/vehicle', vehicleRoutes);
-app.use('/api', inquiryRoutes);
+app.use('/api/inquiry', inquiryRoutes);
 
 
 // Error handling middleware
