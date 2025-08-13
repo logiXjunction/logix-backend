@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs');
 const axios = require("axios");
-
+const { sendEmail } = require('../utils/helperUtils');
 const columns = [
     'name',
     'companyName',
@@ -36,40 +36,41 @@ const columns = [
     'submittedAt'
 ];
 
+
 async function getDistance(pickupAddress, dropAddress) {
-  const MAPBOX_TOKEN = process.env.MAPBOX_API_KEY;
+    const MAPBOX_TOKEN = process.env.MAPBOX_API_KEY;
 
-  try {
-    const pickupGeo = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(pickupAddress)}.json`, {
-      params: { access_token: MAPBOX_TOKEN }
-    });
-    const [pickupLng, pickupLat] = pickupGeo.data.features[0].center;
+    try {
+        const pickupGeo = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(pickupAddress)}.json`, {
+            params: { access_token: MAPBOX_TOKEN }
+        });
+        const [pickupLng, pickupLat] = pickupGeo.data.features[0].center;
 
-    const dropGeo = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(dropAddress)}.json`, {
-      params: { access_token: MAPBOX_TOKEN }
-    });
+        const dropGeo = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(dropAddress)}.json`, {
+            params: { access_token: MAPBOX_TOKEN }
+        });
 
-    const [dropLng, dropLat] = dropGeo.data.features[0].center;
+        const [dropLng, dropLat] = dropGeo.data.features[0].center;
 
-    const directions = await axios.get(`https://api.mapbox.com/directions/v5/mapbox/driving/${pickupLng},${pickupLat};${dropLng},${dropLat}`, {
-      params: { access_token: MAPBOX_TOKEN, overview: "false" }
-    });
+        const directions = await axios.get(`https://api.mapbox.com/directions/v5/mapbox/driving/${pickupLng},${pickupLat};${dropLng},${dropLat}`, {
+            params: { access_token: MAPBOX_TOKEN, overview: "false" }
+        });
 
-    const distanceMeters = directions.data.routes[0].distance;
-    const distanceKm = (distanceMeters / 1000).toFixed(2);
+        const distanceMeters = directions.data.routes[0].distance;
+        const distanceKm = (distanceMeters / 1000).toFixed(2);
 
-    return `${distanceKm} km`;
-  } catch (err) {
-    console.error("Error fetching distance:", err.message);
-    return "Distance not available";
-  }
+        return `${distanceKm} km`;
+    } catch (err) {
+        console.error("Error fetching distance:", err.message);
+        return "Distance not available";
+    }
 }
 
-exports.inquiryForm = async(req, res) => {
-    try { 
+exports.inquiryForm = async (req, res) => {
+    try {
         const formData = req.body;
 
-        console.log("form data ",formData);
+        console.log("form data ", formData);
 
         const reportData = {};
         columns.forEach(col => {
@@ -82,16 +83,18 @@ exports.inquiryForm = async(req, res) => {
         reportData.submittedAt = new Date().toISOString();
 
         //2 Create Excel file
-        // Path to the shared Excel file
+
+
         const filePath = path.join(__dirname, '../temp', 'all_inquiries.xlsx');
-        workbook = new ExcelJS.Workbook();
+        const workbook = new ExcelJS.Workbook();
+        let worksheet;
 
         if (fs.existsSync(filePath)) {
-            // Load existing file
+            // Load the existing workbook
             await workbook.xlsx.readFile(filePath);
             worksheet = workbook.getWorksheet('Inquiries');
-            
-            // If worksheet somehow missing, recreate it
+
+            // If no sheet found, create it
             if (!worksheet) {
                 worksheet = workbook.addWorksheet('Inquiries');
                 worksheet.columns = columns.map(key => ({
@@ -99,72 +102,53 @@ exports.inquiryForm = async(req, res) => {
                     key: key,
                     width: 25
                 }));
+            } else {
+                // Ensure columns exist even if file was made earlier
+                worksheet.columns = columns.map(key => ({
+                    header: key,
+                    key: key,
+                    width: 25
+                }));
             }
-        } else {
-            // Create new workbook & worksheet
-            worksheet = workbook.addWorksheet('Inquiries');
-            worksheet.columns = columns.map(key => ({
-                header: key,
-                key: key,
-                width: 25
-            }));
-        }
-
-        // Add new row
-        worksheet.addRow(reportData);
-
-        //Save excel data in the temp folder
-        await workbook.xlsx.writeFile(filePath);
-
-        //3 Send email
-
-        // Prepare a text version of the report
-        const reportText = Object.entries(reportData)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join('\n');
-
-        console.log(" report data : " , reportData);
-
-        let testAccount  = await nodemailer.createTestAccount();
-
-        let transporter = nodemailer.createTransport({
-            // host: process.env.SMTP_HOST,
-            host: "smtp.ethereal.email",
-
-            // port: process.env.SMTP_PORT || 587,
-            port: 587,
-            secure: false,
-            auth: {
-                // user: process.env.SMTP_USER,
-                // pass: process.env.SMTP_PASS
-                user: 'catherine.herzog@ethereal.email',
-                pass: '7KDzjUpJCPXbA1V4Jd'
-            }
-        });
-
-        let info = await transporter.sendMail({
-            // from: `"Support Team" <${process.env.SMTP_USER}>`,
-            from: '"Divya Singh" <divya@example.com>',
-            to: "vivi@example.com",
-            // to: process.env.SUPPORT_EMAIL,
-            subject: `New Form Submission #${formData.name}`,
-            text: `A new inquiry form has been submitted. Here are the details:\n\n${reportText}`,
-        });
-
-        console.log("Preview URL:", nodemailer.getTestMessageUrl(info))
-
-        res.status(201).json({
-            success: true,
-            message: 'Inquiry added to Excel and emailed successfully.',
-            data: reportData
-        });
-
-    } catch (error) {
-        console.error('Error submitting form: ', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error submitting form',
-            error: error.message
-        })
-    }
 }
+
+            // Append the new row at the end
+            worksheet.addRow(reportData);
+
+            // Save the file back
+            await workbook.xlsx.writeFile(filePath);
+
+
+            //3 Send email
+
+            // Prepare a text version of the report
+            const reportText = Object.entries(reportData)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join('\n');
+
+            console.log(" report data : ", reportData);
+
+            await sendEmail({
+                to: "vivi@example.com",
+                subject: `New Form Submission #${formData.name}`,
+                html: `
+                    <h3>New Inquiry Form Submission</h3>
+                    <pre>${reportText}</pre>
+                `
+            });
+
+            res.status(201).json({
+                success: true,
+                message: 'Inquiry added to Excel and emailed successfully.',
+                data: reportData
+            });
+
+        } catch (error) {
+            console.error('Error submitting form: ', error);
+            res.status(500).json({
+                success: false,
+                message: 'Error submitting form',
+                error: error.message
+            })
+        }
+    }
