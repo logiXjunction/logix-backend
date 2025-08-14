@@ -70,6 +70,7 @@ exports.inquiryForm = async (req, res) => {
     try {
         const formData = req.body;
 
+        //Excel coloums creation
         const reportData = {};
         columns.forEach(col => {
             reportData[col] = req.body[col] !== undefined ? req.body[col] : '';
@@ -124,7 +125,8 @@ exports.inquiryForm = async (req, res) => {
 
             await sendEmail({
                 from: `"Ultron Support" <${process.env.EMAIL_USER}>`,
-                to: `${process.env.EMAIL_SUPPORT}`,
+                // to: `${process.env.EMAIL_SUPPORT}`,
+                to: "divya.ug23@nsut.ac.in",
                 subject: `New Inquiry Form Submission #${reportData.name}`,
                 html: `<h3>New Inquiry Form Submission</h3><pre>${reportText}</pre>`,
             });
